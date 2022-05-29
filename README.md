@@ -1,4 +1,4 @@
-# The Longest Way by Christoph Rehage (https://thelongestway.com/)
+# Realignment scripts for [The Longest Way](https://thelongestway.com/) by Christoph Rehage
 
 This repository contains two scripts, `align_images.py` and `create_video.py`:
 
@@ -68,7 +68,7 @@ Here's an overview of all additional parameters:
 As mentioned in the text, `-u` (upsampling) can make the output more accurate, but also much slower. Should be fine with default parameters. `-d cnn` (using the cnn detector) might slightly improve results, but also here, computation time is much longer. `-p` (padding) can be used to see more or less of the image (try it out with `-p 1` or `-p 6` to see what I mean).
 
 
-### Create video
+### Create video
 
 To create a video out of some images, please ensure that you have ffmpeg installed.
 
