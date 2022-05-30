@@ -112,6 +112,9 @@ def main(args):
         landmarks = [shape_predictor(canvas, r) for r in rectangles]
         face_chips = [dlib.get_face_chip(canvas, l, size=args.chip_size[0], padding=args.padding) for l in landmarks]
 
+        # Only keep main face (comment the following line to also get other faces)
+        face_chips = face_chips[:1]
+
         # Crop face chips to right ratio and save them
         for idx, face in enumerate(face_chips):
 
