@@ -24,8 +24,9 @@ def main(args):
     tmp_img_idx = Path(f"imgs_for_video_{args.output}")
 
     # Remove already existing folder
-    [t.unlink() for t in tmp_img_idx.glob('*?.*')]
-    tmp_img_idx.rmdir()
+    if tmp_img_idx.exists():
+        [t.unlink() for t in tmp_img_idx.glob('*?.*')]
+        tmp_img_idx.rmdir()
 
     # Create temporary folder to store images into
     tmp_img_idx.mkdir(parents=True, exist_ok=True)
