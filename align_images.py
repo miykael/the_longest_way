@@ -20,10 +20,7 @@ def crop_img(img, dim=(1920, 1080)):
 
 def get_distance_to_center(img, rectangle):
 
-    """Computes the distance of the detecte face to the center of the image and
-    computes the width to total image ratio (should be about 1/7th). The output
-    of this function is the product of the two values and should be close to
-    zero for a nicely centered face."""
+    """Computes the distance of the detecte face to the center of the image."""
 
     # Extract rectangle center
     center_idx = rectangle.center()
@@ -31,13 +28,12 @@ def get_distance_to_center(img, rectangle):
 
     # Compute center and width discrepancies
     discrepancy_center = np.linalg.norm(np.divide(img.shape[:2], 2) - center_idx)
-    discrepancy_width = img.shape[1] / 6.0 - rectangle.width()
 
     # Return product of discrepancies
-    return np.abs(discrepancy_center * discrepancy_width), discrepancy_width
+    return np.abs(discrepancy_center)
 
 
-def zoom(img, zoom_factor=1.25):
+def zoom(img, zoom_factor=1.33):
     """Zoom main image to create background image"""
     return cv2.resize(img, None, fx=zoom_factor, fy=zoom_factor)
 
@@ -45,7 +41,7 @@ def zoom(img, zoom_factor=1.25):
 def get_mask(input_image):
     """This function returns a mask of connected black regions of at least a specific size."""
     color_mean = input_image.mean(-1)
-    label_im, nb_labels = ndimage.label(color_mean)
+    label_im, _ = ndimage.label(color_mean)
 
     # Find black regions
     mask_labels = [idx for idx in range(10) if color_mean[label_im == idx].sum() == 0]
@@ -102,10 +98,10 @@ def main(args):
 
         # Sort detected faces according to size and distance from center
         rectangle_info = np.array([get_distance_to_center(canvas, r) for r in rectangles])
-        idx_sort = np.argsort(rectangle_info[:, 0])
+        idx_sort = np.argsort(rectangle_info)
 
-        # Only keep faces that are big enough
-        idx_sort = idx_sort[rectangle_info[:, 1] < 400]
+        # Only keep most central face
+        idx_sort = idx_sort[:1]
         rectangles = rectangles[idx_sort]
 
         # Extract landmarks and face chips
@@ -122,7 +118,7 @@ def main(args):
             img_final = crop_img(face, dim=args.chip_size)
 
             # Compute zoomed background to cover up black borders
-            background = zoom(img_final, zoom_factor=1.25)
+            background = zoom(img_final, zoom_factor=1.33)
             w, h = img_final.shape[:2]
             center = np.array(background.shape) / 2
             x = int(center[0] - w / 2)
@@ -182,8 +178,8 @@ if __name__ == "__main__":
         "--chip_size",
         nargs="+",
         required=False,
-        default=[3840, 2160],
-        help="Image resolution of the output image. Choose '4240 2832' for 12MP camera resolution, or '3840 2160' for 4k resolution.",
+        default=[4368, 2912],
+        help="Image resolution of the output image. Choose '4368 2912' for 12.7MP camera resolution, or '3840 2160' for 4k resolution.",
     )
     parser.add_argument(
         "-u",
