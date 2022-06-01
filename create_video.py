@@ -138,8 +138,8 @@ if __name__ == "__main__":
         "--resolution",
         nargs="+",
         required=False,
-        default=[3840, 2160],
-        help="Image resolution of the video. Up to you, but could be '3840 2160' (4k), or '1920 1080' (Full HD).",
+        default=[4368, 2912],
+        help="Image resolution of the video. Up to you, but could be '4368 2912' (12.7MP), '3840 2160' (4k), or '1920 1080' (Full HD).",
     )
     args = parser.parse_args()
 
