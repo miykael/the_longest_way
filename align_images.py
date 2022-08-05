@@ -52,7 +52,7 @@ def get_mask(input_image):
 def main(args):
 
     # Collect filenames of images to process
-    filenames = sorted(args.input.glob("*"))
+    filenames = sorted(args.input.glob(f"*.{args.outtype.lower()}"))
 
     # dlib predictor and detector for face recognition
     shape_predictor = dlib.shape_predictor(str(args.dlib / "shape_predictor_5_face_landmarks.dat"))
