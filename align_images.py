@@ -3,8 +3,10 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy import ndimage
 from skimage import io
+from skimage.util import img_as_float
 from tqdm import tqdm
 
 import dlib
@@ -51,11 +53,28 @@ def get_mask(input_image):
 
 def main(args):
 
+    """
+    args.input = Path('raw')
+    args.output = Path('processed')
+    args.dlib = Path('dlib')
+    args.force = True
+    args.chip_size = [4368, 2912]
+    args.upsample = 1
+    args.intype = 'tif'
+    args.outtype = 'tif'
+    args.detector = 'hog' # or cnn
+    args.shape = 68
+    args.padding = 3.25
+    """
+
     # Collect filenames of images to process
-    filenames = sorted(args.input.glob(f"*.{args.outtype.lower()}"))
+    filenames = sorted(args.input.glob(f"*.{args.intype.lower()}"))
 
     # dlib predictor and detector for face recognition
-    shape_predictor = dlib.shape_predictor(str(args.dlib / "shape_predictor_5_face_landmarks.dat"))
+    if args.shape == 5:
+        shape_predictor = dlib.shape_predictor(str(args.dlib / "shape_predictor_5_face_landmarks.dat"))
+    elif args.shape == 68:
+        shape_predictor = dlib.shape_predictor(str(args.dlib / "shape_predictor_68_face_landmarks.dat"))
     hog_detector = dlib.get_frontal_face_detector()
     cnn_detector = dlib.cnn_face_detection_model_v1(str(args.dlib / "mmod_human_face_detector.dat"))
 
@@ -70,7 +89,7 @@ def main(args):
             continue
 
         # Load image
-        im = io.imread(f)
+        im = (img_as_float(io.imread(f)) * 255).astype('uint8')
 
         # Get information about image size
         w, h = im.shape[:2]
@@ -107,9 +126,10 @@ def main(args):
         # Extract landmarks and face chips
         landmarks = [shape_predictor(canvas, r) for r in rectangles]
         face_chips = [dlib.get_face_chip(canvas, l, size=args.chip_size[0], padding=args.padding) for l in landmarks]
+        points = np.array([np.array([[e.x, e.y] for e in l.parts()]) for l in landmarks])
 
         # Only keep main face (comment the following line to also get other faces)
-        face_chips = face_chips[:1]
+        #face_chips = face_chips[:1]
 
         # Crop face chips to right ratio and save them
         for idx, face in enumerate(face_chips):
@@ -190,11 +210,19 @@ if __name__ == "__main__":
         help="Factor to upsample image. Can be 0, 1, 2, ... This parameter improves alignment but increases computation time. Default 1 seems to be a good compromise.",
     )
     parser.add_argument(
-        "-t",
+        "-it",
+        "--intype",
+        type=str,
+        required=False,
+        default="tif",
+        help="File type of output image. Can be 'jpg', 'png', 'tif', ...",
+    )
+    parser.add_argument(
+        "-ot",
         "--outtype",
         type=str,
         required=False,
-        default="jpg",
+        default="tif",
         help="File type of output image. Can be 'jpg', 'png', 'tif', ...",
     )
     parser.add_argument(
@@ -204,6 +232,14 @@ if __name__ == "__main__":
         required=False,
         default="hog",
         help="Specify if hog or cnn detector should be used. CNN is more advanced and better, but takes longer.",
+    )
+    parser.add_argument(
+        "-s",
+        "--shape",
+        type=int,
+        required=False,
+        default=5,
+        help="Number of landmarks to use for alignment. Possible values are 5 or 68.",
     )
     parser.add_argument(
         "-p",
